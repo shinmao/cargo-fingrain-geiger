@@ -60,6 +60,11 @@ OPTIONS:
                                   significantly faster than the default
                                   scanning mode. TODO: Add ability to combine
                                   this with a whitelist for use in CI.
+        --unsafe-call-analysis    Enable rustc-based unsafe function call
+                                  origin analysis (requires nightly Rust with
+                                  rustc_private). Categorizes unsafe calls by
+                                  their origin: core, alloc, std, or other
+                                  crates.
     -h, --help                    Prints help information.
     -V, --version                 Prints version information.
 ";
@@ -86,6 +91,7 @@ pub struct Args {
     pub quiet: bool,
     pub readme_args: ReadmeArgs,
     pub target_args: TargetArgs,
+    pub unsafe_call_analysis: bool,
     pub unstable_flags: Vec<String>,
     pub verbosity: Verbosity,
     pub version: bool,
@@ -141,6 +147,7 @@ impl Args {
                 all_targets: raw_args.contains("--all-targets"),
                 target: raw_args.opt_value_from_str("--target")?,
             },
+            unsafe_call_analysis: raw_args.contains("--unsafe-call-analysis"),
             unstable_flags: raw_args
                 .opt_value_from_str("-Z")?
                 .map(|s: String| s.split(' ').map(|s| s.to_owned()).collect())

@@ -1,91 +1,157 @@
-cargo-geiger ☢️ 
-===============
+cargo-fingrain-geiger ☢️ 
+========================
 
-[![CI](https://github.com/geiger-rs/cargo-geiger/actions/workflows/ci.yml/badge.svg)](https://github.com/geiger-rs/cargo-geiger/actions/workflows/ci.yml)
-[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
-[![crates.io](https://img.shields.io/crates/v/cargo-geiger.svg)](https://crates.io/crates/cargo-geiger)
-[![Crates.io](https://img.shields.io/crates/d/cargo-geiger?label=cargo%20installs)](https://crates.io/crates/cargo-geiger)
+A fine-grained unsafe Rust code analyzer that classifies unsafe operations by their origin and type.
 
-A tool that lists statistics related to the usage of unsafe Rust code in a Rust
-crate and all its dependencies.
+This is an enhanced fork of [cargo-geiger](https://github.com/geiger-rs/cargo-geiger) with additional capabilities for analyzing **where** unsafe calls originate from and tracking **all 5 types of unsafe behaviors** defined by Rust.
 
-This cargo plugin was originally based on the code from two other projects:
-* <https://github.com/icefoxen/cargo-osha> and
-* <https://github.com/sfackler/cargo-tree>
+## Rust's 5 Unsafe Behaviors
 
-Installation
-------------
+According to the Rust Reference, there are exactly 5 operations that require `unsafe`:
 
-Try to find and use a system-wide installed OpenSSL library:
+1. **Dereference a raw pointer** - `*ptr`
+2. **Call an unsafe function or method** - `unsafe_fn()`
+3. **Access or modify a mutable static variable** - `static mut`
+4. **Implement an unsafe trait** - `unsafe impl Trait`
+5. **Access fields of unions** - `union.field`
 
-```bash
-cargo install --locked cargo-geiger
+This tool tracks all of these behaviors (where statically determinable).
+
+## New Features
+
+In addition to the original cargo-geiger functionality, this tool provides:
+
+- **Fine-grained classification of unsafe function/method calls**:
+  - `core::` - Calls to Rust core library (e.g., `ptr::read`, `mem::transmute`)
+  - `alloc::` - Calls to allocation library (e.g., `Vec::set_len`, `Box::from_raw`)
+  - `std::` - Calls to standard library
+  - `other` - Calls to crate-defined unsafe functions
+
+- **Detection of unsafe method calls** (not just function calls):
+  - Raw pointer methods: `.add()`, `.sub()`, `.offset()`, `.read()`, `.write()`
+  - Slice methods: `.get_unchecked()`, `.get_unchecked_mut()`
+  - MaybeUninit methods: `.assume_init()`, `.assume_init_ref()`
+  - And many more from the standard library
+
+- **SIMD intrinsics detection**:
+  - x86/x86_64: `_mm_*`, `_mm256_*`, `_mm512_*`
+  - ARM NEON intrinsics
+
+- **Mutable static access tracking** (NEW)
+
+- **Union field access tracking** (NEW, heuristic-based)
+
+## Empirical Study Results
+
+We analyzed **82 popular Rust crates** to understand the composition of unsafe code usage.
+
+### Total Unsafe Operations: 3,029
+
+| Unsafe Behavior | Count | Percentage |
+|-----------------|-------|------------|
+| **1. Raw Pointer Dereference** | 353 | 11.65% |
+| **2. Unsafe Fn/Method Calls** | 2,529 | 83.49% |
+| &nbsp;&nbsp;&nbsp;&nbsp;↳ Core calls | 1,387 | 45.79% |
+| &nbsp;&nbsp;&nbsp;&nbsp;↳ Alloc calls | 19 | 0.63% |
+| &nbsp;&nbsp;&nbsp;&nbsp;↳ Std calls | 16 | 0.53% |
+| &nbsp;&nbsp;&nbsp;&nbsp;↳ Other calls | 1,107 | 36.55% |
+| **3. Mutable Static Access** | * | * |
+| **4. Unsafe Trait Impl** | 144 | 4.75% |
+| **4b. Unsafe Trait Declaration** | 3 | 0.10% |
+| **5. Union Field Access** | * | * |
+
+\* Tracked but not included in table output format yet
+
+### Key Findings
+
+| Category | Count | Percentage |
+|----------|-------|------------|
+| Ptr Dereferences | 353 | **11.65%** |
+| Stdlib calls (core+alloc+std) | 1,422 | **46.95%** |
+| Other unsafe calls | 1,107 | **36.55%** |
+| Unsafe trait impls | 144 | **4.75%** |
+
+#### Insights
+
+- **58.60%** of all unsafe operations are either raw pointer dereferences OR calls to standard library functions
+  - These are well-documented, auditable unsafe operations
+  
+- **46.95%** of unsafe calls are to `core::`/`alloc::`/`std::` functions
+  - The majority are `core::` calls (45.79%), primarily pointer operations and SIMD intrinsics
+
+- **36.55%** of unsafe calls are to crate-defined (`other`) functions
+  - These require more careful manual review
+
+- **~5%** are unsafe trait implementations
+  - Often implementing `Send`, `Sync`, or other marker traits
+
+### Raw Data
+
+```
+Total unsafe operations analyzed: 3,029
+  - Pointer dereferences:        353 (11.65%)
+  - Core calls:                1,387 (45.79%)
+  - Alloc calls:                  19 (0.63%)
+  - Std calls:                    16 (0.53%)
+  - Other fn/method calls:     1,107 (36.55%)
+  - Unsafe trait impls:          144 (4.75%)
+  - Unsafe traits:                 3 (0.10%)
 ```
 
-Or, build and statically link OpenSSL as part of the cargo-geiger executable:
+## Installation
 
 ```bash
-cargo install --locked cargo-geiger --features vendored-openssl
+git clone https://github.com/shinmao/cargo-fingrain-geiger.git
+cd cargo-fingrain-geiger
+cargo build --release
 ```
 
-Alternatively pre-built binary releases are available from [GitHub releases](https://github.com/geiger-rs/cargo-geiger/releases).
+## Usage
 
-Usage
------
+```bash
+# Basic usage
+cargo geiger
 
-1. Navigate to the same directory as the `Cargo.toml` you want to analyze.
-2. `cargo geiger`
+# JSON output with detailed classification
+cargo geiger --output-format Json
+```
 
-Intended Use
-------------
+### Output Columns
 
-This tool is not meant to advise directly whether the code ultimately is truly insecure or not.
+The tool displays the following metrics:
 
-The purpose of cargo-geiger is to provide statistical input to auditing e.g. with:
+| Column | Description |
+|--------|-------------|
+| Functions | Unsafe functions declared |
+| Exprs | Expressions in unsafe contexts |
+| Impls | Unsafe impl blocks |
+| Traits | Unsafe traits |
+| Methods | Unsafe methods |
+| Ptr Derefs | Raw pointer dereferences |
+| Unsafe Calls | Total unsafe fn/method calls |
+| Core | Calls to `core::` unsafe APIs |
+| Alloc | Calls to `alloc::` unsafe APIs |
+| Std | Calls to `std::` unsafe APIs |
+| Other | Calls to crate-defined unsafe fns |
 
-- [cargo-crev](https://crates.io/crates/cargo-crev)
-- [safety-dance](https://github.com/rust-secure-code/safety-dance)
+## Libraries
 
-The use of unsafe is nuanced and necessary in some cases and any motivation to use it is outside the scope of cargo-geiger.
+This project exposes three libraries:
 
-It is important that any reporting is handled with care:
+- `cargo-geiger` - The main binary internals
+- `cargo-geiger-serde` - Serializable report types with new classification fields
+- `geiger` - Core analysis components with fine-grained unsafe call detection
 
-- [Reddit: The Stigma around Unsafe](https://www.reddit.com/r/rust/comments/y1u068/the_stigma_around_unsafe/)
-- [YouTube: Rust NYC: Jon Gjengset - Demystifying unsafe code](https://youtu.be/QAz-maaH0KM)
-- [Rust-lang: WG Unsafe Code Guidelines](https://github.com/rust-lang/unsafe-code-guidelines)
+## Acknowledgments
 
-Output example
---------------
+This project is based on [cargo-geiger](https://github.com/geiger-rs/cargo-geiger) by the Rust Secure Code Working Group.
 
-![Example output](https://user-images.githubusercontent.com/3704611/53132247-845f7080-356f-11e9-9c76-a9498d4a744b.png)
+Original projects that inspired cargo-geiger:
+- <https://github.com/icefoxen/cargo-osha>
+- <https://github.com/sfackler/cargo-tree>
 
-Known issues
-------------
-
- - See the [issue tracker](https://github.com/rust-secure-code/cargo-geiger/issues).
-
-Libraries
----------
-
-Cargo Geiger exposes three libraries:
-
- - `cargo-geiger` - Unversioned and highly unstable library exposing the internals of the `cargo-geiger` binary. As such, any function contained within this library may be subject to change.
- - `cargo-geiger-serde` - A library containing the serializable report types
- - `geiger` - A library containing a few decoupled [cargo] components used by [cargo-geiger]
-
-Changelog
----------
-
-See the [changelog].
-
-[cargo]: https://crates.io/crates/cargo
-[cargo-geiger]: https://crates.io/crates/cargo-geiger
-[changelog]: https://github.com/rust-secure-code/cargo-geiger/blob/master/CHANGELOG.md
-
-Why the name?
--------------
+## Why the name?
 
 <https://en.wikipedia.org/wiki/Geiger_counter>
 
-Unsafe code, like ionizing radiation, is unavoidable in some situations and should be safely contained!
-
+Unsafe code, like ionizing radiation, is unavoidable in some situations and should be safely contained! This "fine-grained" version helps you understand exactly what kind of radiation you're dealing with. ☢️

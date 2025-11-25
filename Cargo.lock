@@ -418,6 +418,7 @@ dependencies = [
  "console",
  "fs_extra",
  "geiger",
+ "geiger-resolve",
  "insta",
  "krates",
  "petgraph",
@@ -1166,6 +1167,14 @@ dependencies = [
  "rstest",
  "syn",
  "tempfile",
+]
+
+[[package]]
+name = "geiger-resolve"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

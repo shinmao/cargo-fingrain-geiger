@@ -186,6 +186,28 @@ pub struct CounterBlock {
     pub item_impls: Count,
     pub item_traits: Count,
     pub methods: Count,
+    /// Raw pointer dereferences
+    pub ptr_derefs: Count,
+    /// Calls to unsafe functions (total)
+    pub unsafe_fn_calls: Count,
+    /// Calls to unsafe functions from `core` crate
+    #[serde(default)]
+    pub unsafe_fn_calls_core: Count,
+    /// Calls to unsafe functions from `alloc` crate
+    #[serde(default)]
+    pub unsafe_fn_calls_alloc: Count,
+    /// Calls to unsafe functions from `std` crate
+    #[serde(default)]
+    pub unsafe_fn_calls_std: Count,
+    /// Calls to unsafe functions from other crates
+    #[serde(default)]
+    pub unsafe_fn_calls_other: Count,
+    /// Access to mutable static variables
+    #[serde(default)]
+    pub static_mut_access: Count,
+    /// Access to union fields
+    #[serde(default)]
+    pub union_field_access: Count,
 }
 
 impl CounterBlock {
@@ -195,6 +217,14 @@ impl CounterBlock {
             || self.item_impls.unsafe_ > 0
             || self.item_traits.unsafe_ > 0
             || self.methods.unsafe_ > 0
+            || self.ptr_derefs.unsafe_ > 0
+            || self.unsafe_fn_calls.unsafe_ > 0
+            || self.unsafe_fn_calls_core.unsafe_ > 0
+            || self.unsafe_fn_calls_alloc.unsafe_ > 0
+            || self.unsafe_fn_calls_std.unsafe_ > 0
+            || self.unsafe_fn_calls_other.unsafe_ > 0
+            || self.static_mut_access.unsafe_ > 0
+            || self.union_field_access.unsafe_ > 0
     }
 }
 
@@ -208,6 +238,20 @@ impl Add for CounterBlock {
             item_impls: self.item_impls + other.item_impls,
             item_traits: self.item_traits + other.item_traits,
             methods: self.methods + other.methods,
+            ptr_derefs: self.ptr_derefs + other.ptr_derefs,
+            unsafe_fn_calls: self.unsafe_fn_calls + other.unsafe_fn_calls,
+            unsafe_fn_calls_core: self.unsafe_fn_calls_core
+                + other.unsafe_fn_calls_core,
+            unsafe_fn_calls_alloc: self.unsafe_fn_calls_alloc
+                + other.unsafe_fn_calls_alloc,
+            unsafe_fn_calls_std: self.unsafe_fn_calls_std
+                + other.unsafe_fn_calls_std,
+            unsafe_fn_calls_other: self.unsafe_fn_calls_other
+                + other.unsafe_fn_calls_other,
+            static_mut_access: self.static_mut_access
+                + other.static_mut_access,
+            union_field_access: self.union_field_access
+                + other.union_field_access,
         }
     }
 }

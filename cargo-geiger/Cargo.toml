@@ -22,6 +22,7 @@ cargo-platform = "0.1.9"
 colored = "3.0.0"
 console = "0.15.11"
 geiger = { path = "../geiger", version = "0.5.0" }
+geiger-resolve = { path = "../geiger-resolve", version = "0.1.0", optional = true }
 krates = { version = "0.18.1", features = ["metadata"] }
 petgraph = "0.7.1"
 pico-args = "0.5.0"
@@ -37,6 +38,9 @@ cargo-util = "0.2.18"
 
 [features]
 vendored-openssl = ["cargo/vendored-openssl"]
+# Note: We only use geiger-resolve's data structures, not the rustc_private analysis
+# The actual rustc analysis must be run as a separate tool due to rustc_private limitations
+unsafe-call-analysis = ["geiger-resolve"]
 
 [dev-dependencies]
 assert_cmd = "2.0.10"

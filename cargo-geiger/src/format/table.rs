@@ -22,12 +22,18 @@ use std::path::PathBuf;
 // TODO: use a table library, or factor the tableness out in a smarter way. This
 // is probably easier now when the tree formatting is separated from the tree
 // traversal.
-pub const UNSAFE_COUNTERS_HEADER: [&str; 6] = [
+pub const UNSAFE_COUNTERS_HEADER: [&str; 12] = [
     "Functions ",
     "Expressions ",
     "Impls ",
     "Traits ",
     "Methods ",
+    "Ptr Derefs ",
+    "Unsafe Calls ",
+    "Core ",
+    "Alloc ",
+    "Std ",
+    "Other ",
     "Dependency",
 ];
 
@@ -110,12 +116,18 @@ fn table_footer_unsafe_counts(
         format!("{}/{}", used.unsafe_, used.unsafe_ + not_used.unsafe_)
     };
     let output = format!(
-        "{: <10} {: <12} {: <6} {: <7} {}",
+        "{: <10} {: <12} {: <6} {: <7} {: <7} {: <11} {: <13} {: <6} {: <6} {: <6} {}",
         fmt(&used.functions, &not_used.functions),
         fmt(&used.exprs, &not_used.exprs),
         fmt(&used.item_impls, &not_used.item_impls),
         fmt(&used.item_traits, &not_used.item_traits),
         fmt(&used.methods, &not_used.methods),
+        fmt(&used.ptr_derefs, &not_used.ptr_derefs),
+        fmt(&used.unsafe_fn_calls, &not_used.unsafe_fn_calls),
+        fmt(&used.unsafe_fn_calls_core, &not_used.unsafe_fn_calls_core),
+        fmt(&used.unsafe_fn_calls_alloc, &not_used.unsafe_fn_calls_alloc),
+        fmt(&used.unsafe_fn_calls_std, &not_used.unsafe_fn_calls_std),
+        fmt(&used.unsafe_fn_calls_other, &not_used.unsafe_fn_calls_other),
     );
     colorize(&status, output_format, output)
 }
@@ -144,12 +156,18 @@ fn table_footer_safe_ratio(
         )
     };
     let output = format!(
-        "{: <12} {: <18} {: <18} {: <12} {: <12}",
+        "{: <12} {: <18} {: <18} {: <12} {: <12} {: <12} {: <18} {: <12} {: <12} {: <12} {: <12}",
         fmt(&used.functions, &not_used.functions),
         fmt(&used.exprs, &not_used.exprs),
         fmt(&used.item_impls, &not_used.item_impls),
         fmt(&used.item_traits, &not_used.item_traits),
         fmt(&used.methods, &not_used.methods),
+        fmt(&used.ptr_derefs, &not_used.ptr_derefs),
+        fmt(&used.unsafe_fn_calls, &not_used.unsafe_fn_calls),
+        fmt(&used.unsafe_fn_calls_core, &not_used.unsafe_fn_calls_core),
+        fmt(&used.unsafe_fn_calls_alloc, &not_used.unsafe_fn_calls_alloc),
+        fmt(&used.unsafe_fn_calls_std, &not_used.unsafe_fn_calls_std),
+        fmt(&used.unsafe_fn_calls_other, &not_used.unsafe_fn_calls_other),
     );
     colorize(&status, output_format, output)
 }
@@ -202,12 +220,18 @@ fn table_row(
                 )
             };
             format!(
-                "{: <12} {: <18} {: <18} {: <12} {: <12}",
+                "{: <12} {: <18} {: <18} {: <12} {: <12} {: <12} {: <18} {: <12} {: <12} {: <12} {: <12}",
                 fmt(&used.functions, &not_used.functions),
                 fmt(&used.exprs, &not_used.exprs),
                 fmt(&used.item_impls, &not_used.item_impls),
                 fmt(&used.item_traits, &not_used.item_traits),
-                fmt(&used.methods, &not_used.methods)
+                fmt(&used.methods, &not_used.methods),
+                fmt(&used.ptr_derefs, &not_used.ptr_derefs),
+                fmt(&used.unsafe_fn_calls, &not_used.unsafe_fn_calls),
+                fmt(&used.unsafe_fn_calls_core, &not_used.unsafe_fn_calls_core),
+                fmt(&used.unsafe_fn_calls_alloc, &not_used.unsafe_fn_calls_alloc),
+                fmt(&used.unsafe_fn_calls_std, &not_used.unsafe_fn_calls_std),
+                fmt(&used.unsafe_fn_calls_other, &not_used.unsafe_fn_calls_other)
             )
         }
         _ => {
@@ -215,12 +239,18 @@ fn table_row(
                 format!("{}/{}", used.unsafe_, used.unsafe_ + not_used.unsafe_)
             };
             format!(
-                "{: <10} {: <12} {: <6} {: <7} {: <7}",
+                "{: <10} {: <12} {: <6} {: <7} {: <7} {: <11} {: <13} {: <6} {: <6} {: <6} {: <6}",
                 fmt(&used.functions, &not_used.functions),
                 fmt(&used.exprs, &not_used.exprs),
                 fmt(&used.item_impls, &not_used.item_impls),
                 fmt(&used.item_traits, &not_used.item_traits),
-                fmt(&used.methods, &not_used.methods)
+                fmt(&used.methods, &not_used.methods),
+                fmt(&used.ptr_derefs, &not_used.ptr_derefs),
+                fmt(&used.unsafe_fn_calls, &not_used.unsafe_fn_calls),
+                fmt(&used.unsafe_fn_calls_core, &not_used.unsafe_fn_calls_core),
+                fmt(&used.unsafe_fn_calls_alloc, &not_used.unsafe_fn_calls_alloc),
+                fmt(&used.unsafe_fn_calls_std, &not_used.unsafe_fn_calls_std),
+                fmt(&used.unsafe_fn_calls_other, &not_used.unsafe_fn_calls_other)
             )
         }
     }
@@ -256,19 +286,19 @@ mod table_tests {
         expected_line,
         case(
             OutputFormat::Ascii,
-            String::from("2/4        4/8          6/12   8/16    10/20")
+            String::from("2/4        4/8          6/12   8/16    10/20   0/0         0/0           0/0    0/0    0/0    0/0")
         ),
         case(
             OutputFormat::GitHubMarkdown,
-            String::from("2/4        4/8          6/12   8/16    10/20")
+            String::from("2/4        4/8          6/12   8/16    10/20   0/0         0/0           0/0    0/0    0/0    0/0")
         ),
         case(
             OutputFormat::Ratio,
-            String::from("    2/6=33.33%     6/14=42.86%       10/22=45.45%       14/30=46.67%    18/38=47.37%")
+            String::from("    2/6=33.33%     6/14=42.86%       10/22=45.45%       14/30=46.67%    18/38=47.37%     0/0=100.00%     0/0=100.00%        0/0=100.00%     0/0=100.00%     0/0=100.00%     0/0=100.00%")
         ),
         case(
             OutputFormat::Utf8,
-            String::from("2/4        4/8          6/12   8/16    10/20")
+            String::from("2/4        4/8          6/12   8/16    10/20   0/0         0/0           0/0    0/0    0/0    0/0")
         )
     )]
     fn table_footer_test(
@@ -329,13 +359,13 @@ mod table_tests {
 
         let table_row =
             table_row(&unsafety.used, &unsafety.unused, OutputFormat::Ascii);
-        assert_eq!(table_row, "4/6        8/12         12/18  16/24   20/30  ");
+        assert_eq!(table_row, "4/6        8/12         12/18  16/24   20/30   0/0         0/0           0/0    0/0    0/0    0/0   ");
     }
 
     #[rstest]
     fn table_row_empty_test() {
         let empty_table_row = table_row_empty();
-        assert_eq!(empty_table_row.len(), 55);
+        assert_eq!(empty_table_row.len(), 106);
     }
 
     #[rstest(
@@ -401,6 +431,38 @@ mod table_tests {
             methods: Count {
                 safe: 9,
                 unsafe_: 10,
+            },
+            ptr_derefs: Count {
+                safe: 0,
+                unsafe_: 0,
+            },
+            unsafe_fn_calls: Count {
+                safe: 0,
+                unsafe_: 0,
+            },
+            unsafe_fn_calls_core: Count {
+                safe: 0,
+                unsafe_: 0,
+            },
+            unsafe_fn_calls_alloc: Count {
+                safe: 0,
+                unsafe_: 0,
+            },
+            unsafe_fn_calls_std: Count {
+                safe: 0,
+                unsafe_: 0,
+            },
+            unsafe_fn_calls_other: Count {
+                safe: 0,
+                unsafe_: 0,
+            },
+            static_mut_access: Count {
+                safe: 0,
+                unsafe_: 0,
+            },
+            union_field_access: Count {
+                safe: 0,
+                unsafe_: 0,
             },
         }
     }

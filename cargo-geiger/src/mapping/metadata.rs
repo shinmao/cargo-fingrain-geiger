@@ -203,6 +203,9 @@ mod metadata_tests {
                     p.get_package_id_name_and_version(&krates).unwrap();
                 name
             })
+            // Filter out optional dependencies that aren't activated
+            // (e.g., geiger-resolve which requires the unsafe-call-analysis feature)
+            .filter(|name| *name != "geiger-resolve")
             .collect::<Vec<String>>();
 
         cargo_core_package_names.sort();

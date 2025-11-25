@@ -102,6 +102,14 @@ impl IntegrationTest for Test1 {
                         safe: 4,
                         unsafe_: 2,
                     },
+                    unsafe_fn_calls: Count {
+                        safe: 0,
+                        unsafe_: 1,
+                    },
+                    unsafe_fn_calls_std: Count {
+                        safe: 0,
+                        unsafe_: 1,
+                    },
                     ..Default::default()
                 },
                 ..Default::default()
@@ -144,6 +152,18 @@ impl IntegrationTest for Test2 {
                     exprs: Count {
                         safe: 0,
                         unsafe_: 4,
+                    },
+                    unsafe_fn_calls: Count {
+                        safe: 0,
+                        unsafe_: 2,
+                    },
+                    unsafe_fn_calls_other: Count {
+                        safe: 0,
+                        unsafe_: 2,
+                    },
+                    static_mut_access: Count {
+                        safe: 0,
+                        unsafe_: 2,
                     },
                     ..Default::default()
                 },
@@ -193,6 +213,14 @@ impl IntegrationTest for Test3 {
                         safe: 6,
                         unsafe_: 1,
                     },
+                    unsafe_fn_calls: Count {
+                        safe: 0,
+                        unsafe_: 1,
+                    },
+                    unsafe_fn_calls_other: Count {
+                        safe: 0,
+                        unsafe_: 1,
+                    },
                     ..Default::default()
                 },
                 ..Default::default()
@@ -238,6 +266,10 @@ impl IntegrationTest for Test4 {
                     },
                     exprs: Count {
                         safe: 1,
+                        unsafe_: 1,
+                    },
+                    ptr_derefs: Count {
+                        safe: 0,
                         unsafe_: 1,
                     },
                     ..Default::default()

@@ -2,6 +2,7 @@ mod default;
 mod find;
 mod forbid;
 mod rs_file;
+mod rustc_resolve;
 
 use crate::args::Args;
 use crate::format::print_config::PrintConfig;

@@ -14,10 +14,10 @@ Symbols:
     ❓  = No `unsafe` usage found, missing #![forbid(unsafe_code)]
     ☢️  = `unsafe` usage found
 
-Functions  Expressions  Impls  Traits  Methods  Dependency
+Functions  Expressions  Impls  Traits  Methods  Ptr Derefs  Unsafe Calls  Core  Alloc  Std  Other  Dependency
 
-1/1        2/2          0/0    0/0     0/0      ☢️  test1_package_with_no_deps 0.1.0
+1/1        2/2          0/0    0/0     0/0     0/0         1/1           0/0    0/0    1/1    0/0     ☢️  test1_package_with_no_deps 0.1.0
 
-1/1        2/2          0/0    0/0     0/0
+1/1        2/2          0/0    0/0     0/0     0/0         1/1           0/0    0/0    1/1    0/0
 
 ```

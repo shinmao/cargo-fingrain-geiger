@@ -104,12 +104,24 @@ fn scan(
 
     match resolve_rs_file_deps(&compile_options, workspace) {
         Ok(rs_files_used) => {
-            let geiger_context = find_unsafe(
+            let mut geiger_context = find_unsafe(
                 cargo_metadata_parameters,
                 scan_parameters.gctx,
                 ScanMode::Full,
                 scan_parameters.print_config,
             )?;
+
+            // Run rustc-based analysis if requested
+            if scan_parameters.args.unsafe_call_analysis {
+                if let Err(e) = super::rustc_resolve::run_rustc_analysis(
+                    cargo_metadata_parameters,
+                    &mut geiger_context,
+                    scan_parameters.gctx,
+                ) {
+                    eprintln!("Warning: Rustc-based analysis failed: {}", e);
+                }
+            }
+
             Ok(ScanDetails {
                 rs_files_used,
                 geiger_context,

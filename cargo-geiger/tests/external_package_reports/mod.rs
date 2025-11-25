@@ -37,6 +37,14 @@ pub fn ref_slice_safety_report() -> SafetyReport {
                     safe: 10,
                     unsafe_: 2,
                 },
+                unsafe_fn_calls: Count {
+                    safe: 0,
+                    unsafe_: 2,
+                },
+                unsafe_fn_calls_core: Count {
+                    safe: 0,
+                    unsafe_: 2,
+                },
                 ..Default::default()
             },
             ..Default::default()
@@ -151,6 +159,23 @@ pub fn itertools_safety_report() -> SafetyReport {
                     safe: 337,
                     unsafe_: 0,
                 },
+                ptr_derefs: Count {
+                    safe: 0,
+                    unsafe_: 0,
+                },
+                unsafe_fn_calls: Count {
+                    safe: 0,
+                    unsafe_: 9,
+                },
+                unsafe_fn_calls_std: Count {
+                    safe: 0,
+                    unsafe_: 7,
+                },
+                unsafe_fn_calls_other: Count {
+                    safe: 0,
+                    unsafe_: 2,
+                },
+                ..Default::default()
             },
             unused: CounterBlock {
                 functions: Count {
@@ -173,6 +198,23 @@ pub fn itertools_safety_report() -> SafetyReport {
                     safe: 35,
                     unsafe_: 3,
                 },
+                ptr_derefs: Count {
+                    safe: 0,
+                    unsafe_: 13,
+                },
+                unsafe_fn_calls: Count {
+                    safe: 0,
+                    unsafe_: 24,
+                },
+                unsafe_fn_calls_core: Count {
+                    safe: 0,
+                    unsafe_: 17,
+                },
+                unsafe_fn_calls_other: Count {
+                    safe: 0,
+                    unsafe_: 7,
+                },
+                ..Default::default()
             },
             ..Default::default()
         },
@@ -283,6 +325,14 @@ pub fn idna_safety_report() -> SafetyReport {
                     safe: 13596,
                     unsafe_: 1,
                 },
+                unsafe_fn_calls: Count {
+                    safe: 0,
+                    unsafe_: 1,
+                },
+                unsafe_fn_calls_core: Count {
+                    safe: 0,
+                    unsafe_: 1,
+                },
                 ..Default::default()
             },
             unused: CounterBlock {
@@ -355,6 +405,31 @@ pub fn smallvec_safety_report() -> SafetyReport {
                     safe: 92,
                     unsafe_: 13,
                 },
+                ptr_derefs: Count {
+                    safe: 0,
+                    unsafe_: 21,
+                },
+                unsafe_fn_calls: Count {
+                    safe: 0,
+                    unsafe_: 99,
+                },
+                unsafe_fn_calls_core: Count {
+                    safe: 0,
+                    unsafe_: 69,
+                },
+                unsafe_fn_calls_alloc: Count {
+                    safe: 0,
+                    unsafe_: 6,
+                },
+                unsafe_fn_calls_std: Count {
+                    safe: 0,
+                    unsafe_: 1,
+                },
+                unsafe_fn_calls_other: Count {
+                    safe: 0,
+                    unsafe_: 23,
+                },
+                ..Default::default()
             },
             unused: CounterBlock {
                 functions: Count {
@@ -377,6 +452,15 @@ pub fn smallvec_safety_report() -> SafetyReport {
                     safe: 14,
                     unsafe_: 0,
                 },
+                ptr_derefs: Count {
+                    safe: 0,
+                    unsafe_: 0,
+                },
+                unsafe_fn_calls: Count {
+                    safe: 0,
+                    unsafe_: 0,
+                },
+                ..Default::default()
             },
             ..Default::default()
         },
@@ -463,6 +547,19 @@ pub(super) fn unicode_normalization_safety_report() -> SafetyReport {
                     safe: 21,
                     unsafe_: 0,
                 },
+                ptr_derefs: Count {
+                    safe: 0,
+                    unsafe_: 0,
+                },
+                unsafe_fn_calls: Count {
+                    safe: 0,
+                    unsafe_: 8,
+                },
+                unsafe_fn_calls_other: Count {
+                    safe: 0,
+                    unsafe_: 8,
+                },
+                ..Default::default()
             },
             unused: CounterBlock {
                 functions: Count {

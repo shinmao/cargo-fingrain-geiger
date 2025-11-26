@@ -14,7 +14,6 @@ use rustc_middle::ty::TyCtxt;
 use std::path::PathBuf;
 
 use crate::visitor::UnsafeCallCollector;
-use crate::UnsafeCallReport;
 
 /// Callback for rustc compilation that collects unsafe calls
 pub struct GeigerCallbacks {
@@ -62,8 +61,7 @@ impl Callbacks for GeigerCallbacks {
             }
         }
 
-        let records = visitor.into_records();
-        let report = UnsafeCallReport { records };
+        let report = visitor.into_report();
 
         // Write the report to the output file
         if let Err(e) = report.write_to_file(&self.output_path) {

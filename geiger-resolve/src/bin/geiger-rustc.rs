@@ -19,28 +19,36 @@ fn main() {
 
     let args: Vec<String> = env::args().collect();
 
-    // Find --geiger-output flag
+    // Find --geiger-output flag and separate from rustc args
     let mut output_path = None;
     let mut rustc_args = Vec::new();
+    let mut has_crate_type = false;
 
-    let mut skip_next = false;
-    for (i, arg) in args.iter().enumerate().skip(1) {
-        if skip_next {
-            skip_next = false;
-            continue;
-        }
+    // Add program name as first arg (rustc expects this)
+    rustc_args.push("geiger-rustc".to_string());
+
+    let mut i = 1; // Skip program name
+    while i < args.len() {
+        let arg = &args[i];
 
         if arg == "--geiger-output" {
             if let Some(path) = args.get(i + 1) {
                 output_path = Some(PathBuf::from(path));
-                skip_next = true;
+                i += 2; // Skip both --geiger-output and its value
+                continue;
             } else {
                 eprintln!("Error: --geiger-output requires a path argument");
                 std::process::exit(1);
             }
-        } else {
-            rustc_args.push(arg.clone());
         }
+
+        // Track if --crate-type is already provided
+        if arg == "--crate-type" {
+            has_crate_type = true;
+        }
+
+        rustc_args.push(arg.clone());
+        i += 1;
     }
 
     let output_path = match output_path {
@@ -52,13 +60,18 @@ fn main() {
         }
     };
 
-    // Add required rustc flags
-    rustc_args.push("--crate-type".to_string());
-    rustc_args.push("lib".to_string());
+    // Add required rustc flags if not already present
+    if !has_crate_type {
+        rustc_args.push("--crate-type".to_string());
+        rustc_args.push("lib".to_string());
+    }
 
     match analyze_unsafe_calls_for_current_crate(&rustc_args, &output_path) {
         Ok(()) => {
-            println!("Analysis complete. Report written to: {}", output_path.display());
+            println!(
+                "Analysis complete. Report written to: {}",
+                output_path.display()
+            );
         }
         Err(e) => {
             eprintln!("Analysis failed: {}", e);

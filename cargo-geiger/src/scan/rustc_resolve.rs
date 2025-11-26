@@ -100,7 +100,7 @@ pub fn run_rustc_analysis(
                 // Update the total unsafe_fn_calls
                 metrics_wrapper.metrics.counters.unsafe_fn_calls = Count {
                     safe: 0,
-                    unsafe_: summary.total(),
+                    unsafe_: summary.total_calls(),
                 };
                 // Update the categorized unsafe calls
                 metrics_wrapper.metrics.counters.unsafe_fn_calls_core = Count {
@@ -118,6 +118,19 @@ pub fn run_rustc_analysis(
                 metrics_wrapper.metrics.counters.unsafe_fn_calls_other = Count {
                     safe: 0,
                     unsafe_: summary.other_calls,
+                };
+                // Update additional unsafe patterns from rustc analysis
+                metrics_wrapper.metrics.counters.ptr_derefs = Count {
+                    safe: 0,
+                    unsafe_: summary.ptr_derefs,
+                };
+                metrics_wrapper.metrics.counters.static_mut_access = Count {
+                    safe: 0,
+                    unsafe_: summary.static_mut_accesses,
+                };
+                metrics_wrapper.metrics.counters.union_field_access = Count {
+                    safe: 0,
+                    unsafe_: summary.union_field_accesses,
                 };
                 break; // Only update once per package for now
             }

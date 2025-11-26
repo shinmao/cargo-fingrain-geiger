@@ -31,3 +31,32 @@ pub fn test_unsafe_block() {
         core::ptr::read(ptr);
     }
 }
+
+// Test 6: Raw pointer dereference
+pub unsafe fn test_ptr_deref(p: *const u8) -> u8 {
+    *p
+}
+
+// Test 7: Mutable static access
+static mut COUNTER: u64 = 0;
+
+pub fn test_static_mut_access() {
+    unsafe {
+        COUNTER += 1;
+    }
+}
+
+pub fn test_static_mut_read() -> u64 {
+    unsafe { COUNTER }
+}
+
+// Test 8: Union field access
+union MyUnion {
+    i: i32,
+    f: f32,
+}
+
+pub fn test_union_field_access() -> i32 {
+    let u = MyUnion { i: 42 };
+    unsafe { u.i }
+}

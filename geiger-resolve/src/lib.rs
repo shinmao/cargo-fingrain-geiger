@@ -38,6 +38,51 @@ pub struct UnsafeCallRecord {
     pub origin_kind: OriginKind,
 }
 
+/// Record of a raw pointer dereference
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PtrDerefRecord {
+    /// Name of the crate containing this dereference
+    pub crate_name: String,
+    /// Source file path
+    pub file: String,
+    /// Line number
+    pub line: u32,
+    /// Column number
+    pub column: u32,
+}
+
+/// Record of a mutable static variable access
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StaticMutAccessRecord {
+    /// Name of the crate containing this access
+    pub crate_name: String,
+    /// Source file path
+    pub file: String,
+    /// Line number
+    pub line: u32,
+    /// Column number
+    pub column: u32,
+    /// Name of the static variable
+    pub static_name: String,
+}
+
+/// Record of a union field access
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnionFieldAccessRecord {
+    /// Name of the crate containing this access
+    pub crate_name: String,
+    /// Source file path
+    pub file: String,
+    /// Line number
+    pub line: u32,
+    /// Column number
+    pub column: u32,
+    /// Name of the union type
+    pub union_type: String,
+    /// Name of the field being accessed
+    pub field_name: String,
+}
+
 /// Classification of unsafe function origin
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OriginKind {
@@ -72,10 +117,20 @@ impl OriginKind {
     }
 }
 
-/// Complete report of all unsafe calls in a crate
-#[derive(Debug, Serialize, Deserialize)]
+/// Complete report of all unsafe operations in a crate
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct UnsafeCallReport {
+    /// Unsafe function call records
     pub records: Vec<UnsafeCallRecord>,
+    /// Raw pointer dereference records
+    #[serde(default)]
+    pub ptr_derefs: Vec<PtrDerefRecord>,
+    /// Mutable static access records
+    #[serde(default)]
+    pub static_mut_accesses: Vec<StaticMutAccessRecord>,
+    /// Union field access records
+    #[serde(default)]
+    pub union_field_accesses: Vec<UnionFieldAccessRecord>,
 }
 
 /// Summary of unsafe calls by origin
@@ -89,11 +144,22 @@ pub struct UnsafeCallSummary {
     pub std_calls: u64,
     /// Total number of unsafe calls from other crates
     pub other_calls: u64,
+    /// Total number of raw pointer dereferences
+    pub ptr_derefs: u64,
+    /// Total number of mutable static accesses
+    pub static_mut_accesses: u64,
+    /// Total number of union field accesses
+    pub union_field_accesses: u64,
 }
 
 impl UnsafeCallSummary {
-    pub fn total(&self) -> u64 {
+    pub fn total_calls(&self) -> u64 {
         self.core_calls + self.alloc_calls + self.std_calls + self.other_calls
+    }
+
+    /// Backward compatible method
+    pub fn total(&self) -> u64 {
+        self.total_calls()
     }
 }
 
@@ -101,6 +167,9 @@ impl UnsafeCallReport {
     pub fn new() -> Self {
         UnsafeCallReport {
             records: Vec::new(),
+            ptr_derefs: Vec::new(),
+            static_mut_accesses: Vec::new(),
+            union_field_accesses: Vec::new(),
         }
     }
 
@@ -108,7 +177,19 @@ impl UnsafeCallReport {
         self.records.push(record);
     }
 
-    /// Generate a summary of unsafe calls by origin
+    pub fn add_ptr_deref(&mut self, record: PtrDerefRecord) {
+        self.ptr_derefs.push(record);
+    }
+
+    pub fn add_static_mut_access(&mut self, record: StaticMutAccessRecord) {
+        self.static_mut_accesses.push(record);
+    }
+
+    pub fn add_union_field_access(&mut self, record: UnionFieldAccessRecord) {
+        self.union_field_accesses.push(record);
+    }
+
+    /// Generate a summary of unsafe operations by type and origin
     pub fn summary(&self) -> UnsafeCallSummary {
         let mut summary = UnsafeCallSummary::default();
         for record in &self.records {
@@ -119,6 +200,9 @@ impl UnsafeCallReport {
                 OriginKind::Other => summary.other_calls += 1,
             }
         }
+        summary.ptr_derefs = self.ptr_derefs.len() as u64;
+        summary.static_mut_accesses = self.static_mut_accesses.len() as u64;
+        summary.union_field_accesses = self.union_field_accesses.len() as u64;
         summary
     }
 
@@ -134,12 +218,6 @@ impl UnsafeCallReport {
         let file = std::fs::File::open(path)?;
         let report = serde_json::from_reader(file)?;
         Ok(report)
-    }
-}
-
-impl Default for UnsafeCallReport {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

@@ -157,7 +157,8 @@ impl UnsafeCallSummary {
         self.core_calls + self.alloc_calls + self.std_calls + self.other_calls
     }
 
-    /// Backward compatible method
+    /// Backward compatible method - use `total_calls()` for new code
+    #[deprecated(since = "0.2.0", note = "use `total_calls()` instead")]
     pub fn total(&self) -> u64 {
         self.total_calls()
     }

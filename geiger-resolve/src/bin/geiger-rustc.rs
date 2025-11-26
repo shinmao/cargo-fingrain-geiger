@@ -25,7 +25,9 @@ fn main() {
     let mut has_crate_type = false;
 
     // Add program name as first arg (rustc expects this)
-    rustc_args.push("geiger-rustc".to_string());
+    // Use the actual program name from args[0] if available
+    let program_name = args.first().cloned().unwrap_or_else(|| "geiger-rustc".to_string());
+    rustc_args.push(program_name);
 
     let mut i = 1; // Skip program name
     while i < args.len() {
